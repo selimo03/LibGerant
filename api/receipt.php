@@ -2,10 +2,42 @@
 // api/receipt.php — Génération d'un reçu imprimable pour une vente
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../config/auth.php';
-authorize(['admin', 'libraire']);
+
+// Check if logged in
+check_logged_in();
 
 $id_vente = intval($_GET['id'] ?? 0);
 if (!$id_vente) { http_response_code(400); exit('ID vente manquant.'); }
+
+$user_role = $_SESSION['user_role'] ?? '';
+$user_id = $_SESSION['user_id'] ?? 0;
+
+if ($user_role === 'adherent') {
+    try {
+        $stmt_cli = $pdo->prepare("SELECT id_client FROM clients WHERE id_utilisateur = :uid LIMIT 1");
+        $stmt_cli->execute([':uid' => $user_id]);
+        $client = $stmt_cli->fetch();
+        
+        if (!$client) {
+            http_response_code(403);
+            exit('Accès refusé. Profil client inexistant.');
+        }
+        
+        $stmt_check = $pdo->prepare("SELECT id_client FROM ventes WHERE id_vente = :id LIMIT 1");
+        $stmt_check->execute([':id' => $id_vente]);
+        $v_check = $stmt_check->fetch();
+        
+        if (!$v_check || $v_check['id_client'] != $client['id_client']) {
+            http_response_code(403);
+            exit('Accès refusé. Ce reçu ne vous appartient pas.');
+        }
+    } catch (\PDOException $e) {
+        exit('Erreur : ' . $e->getMessage());
+    }
+} elseif (!in_array($user_role, ['admin', 'libraire'])) {
+    http_response_code(403);
+    exit('Accès refusé.');
+}
 
 try {
     $vente = $pdo->prepare("

@@ -1,5 +1,6 @@
 <?php
 // index.php
+require_once __DIR__ . '/config/auth.php';
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
@@ -187,9 +188,10 @@ try {
                     <span class="badge rounded-pill px-3 py-2 mb-3" style="background:rgba(12,46,98,0.12); color:#0c2e62; font-weight:600"><i class="fas fa-crown me-1"></i> PUBLICATION PRÉSIDENTIELLE</span>
                     <h2 class="display-5 mb-3" style="font-weight:800; color:var(--text-heading)">De Bédouin à Président</h2>
                     <p class="mb-4" style="font-size:1.1rem; color:var(--text-muted); line-height:1.7">L'autobiographie de <strong>S.E. Mahamat Idriss Déby Itno</strong>, Président de la République du Tchad. Du désert tchadien aux plus hautes fonctions de l'État : un témoignage exceptionnel sur un parcours hors du commun, publié aux Éditions VA.</p>
+                    <?php $feat_isbn = $feat_book ? htmlspecialchars($feat_book['isbn']) : '978-2-38600-001-3'; ?>
                     <div class="d-flex flex-wrap gap-3">
-                        <button class="btn btn-primary btn-lg rounded-pill px-4 shadow btn-buy" data-book="De Bédouin à Président" data-price="<?= $feat_price_p ?>"><i class="fas fa-shopping-bag me-2"></i> Papier — <?= $feat_price_p ?></button>
-                        <button class="btn btn-outline-success btn-lg rounded-pill px-4 btn-download" data-book="De Bédouin à Président" data-price="<?= $feat_price_d ?>"><i class="fas fa-download me-2"></i> Kindle — <?= $feat_price_d ?></button>
+                        <button class="btn btn-primary btn-lg rounded-pill px-4 shadow btn-buy" data-isbn="<?= $feat_isbn ?>" data-book="De Bédouin à Président" data-price="<?= $feat_price_p ?>"><i class="fas fa-shopping-bag me-2"></i> Papier — <?= $feat_price_p ?></button>
+                        <button class="btn btn-outline-success btn-lg rounded-pill px-4 btn-download" data-isbn="<?= $feat_isbn ?>" data-book="De Bédouin à Président" data-price="<?= $feat_price_d ?>"><i class="fas fa-download me-2"></i> Kindle — <?= $feat_price_d ?></button>
                     </div>
                 </div>
                 <div class="col-lg-5 text-center">
@@ -268,8 +270,8 @@ try {
                                     <span class="rating-count">4.5</span>
                                 </div>
                                 <div class="book-actions">
-                                    <button class="btn btn-sm btn-primary rounded-pill btn-buy" data-book="<?= htmlspecialchars($book['titre']) ?>" data-price="<?= $price_p ?>"><i class="fas fa-shopping-bag me-1"></i> Papier — <?= $price_p ?></button>
-                                    <button class="btn btn-sm btn-outline-success rounded-pill btn-download" data-book="<?= htmlspecialchars($book['titre']) ?>" data-price="<?= $price_d ?>"><i class="fas fa-download me-1"></i> E-book — <?= $price_d ?></button>
+                                    <button class="btn btn-sm btn-primary rounded-pill btn-buy" data-isbn="<?= htmlspecialchars($book['isbn']) ?>" data-book="<?= htmlspecialchars($book['titre']) ?>" data-price="<?= $price_p ?>"><i class="fas fa-shopping-bag me-1"></i> Papier — <?= $price_p ?></button>
+                                    <button class="btn btn-sm btn-outline-success rounded-pill btn-download" data-isbn="<?= htmlspecialchars($book['isbn']) ?>" data-book="<?= htmlspecialchars($book['titre']) ?>" data-price="<?= $price_d ?>"><i class="fas fa-download me-1"></i> E-book — <?= $price_d ?></button>
                                 </div>
                             </div>
                         </div>
@@ -395,15 +397,119 @@ try {
                     <span style="font-weight:700; color:var(--text-heading)">Total</span>
                     <span id="cart-total" style="font-weight:800; color:var(--primary); font-size:1.1rem">0 FCFA</span>
                 </div>
-                <button class="btn btn-primary w-100 rounded-pill py-3 shadow" style="font-weight:700">
+                <button id="btn-checkout" class="btn btn-primary w-100 rounded-pill py-3 shadow" style="font-weight:700">
                     <i class="fas fa-lock me-2"></i>Passer la commande
                 </button>
             </div>
         </div>
     </div>
 
+    <!-- Modal Finaliser Commande -->
+    <div class="modal fade" id="checkoutModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-radius:24px; background:var(--bg-card); overflow:hidden;">
+                <div class="modal-header border-bottom p-4" style="background:var(--bg-card)">
+                    <h5 class="modal-title" style="font-weight:800; color:var(--text-heading)">
+                        <i class="fas fa-shopping-basket me-2 text-primary"></i>Finaliser ma commande
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="checkout-form">
+                    <div class="modal-body p-4">
+                        <!-- Résumé Panier -->
+                        <div class="mb-4 p-3 rounded-4" style="background:var(--bg-body); border:1px solid var(--border-color)">
+                            <h6 class="mb-3" style="font-weight:700; color:var(--text-heading)">Résumé de vos articles</h6>
+                            <div id="checkout-summary-list" class="d-flex flex-column gap-2 mb-3">
+                                <!-- Dynamiquement rempli par JS -->
+                            </div>
+                            <hr style="border-color:var(--border-color)">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span style="font-weight:600; color:var(--text-muted)">Total à payer :</span>
+                                <span id="checkout-summary-total" style="font-weight:800; color:var(--primary); font-size:1.2rem">0 FCFA</span>
+                            </div>
+                        </div>
+
+                        <!-- Formulaire Client -->
+                        <div class="mb-3">
+                            <h6 class="mb-3" style="font-weight:700; color:var(--text-heading)">Informations de facturation</h6>
+                            <?php if ($is_logged_in): ?>
+                                <div class="p-3 rounded-4 border" style="background:rgba(99,102,241,0.05); border-color:rgba(99,102,241,0.2) !important">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width:42px; height:42px; font-weight:700">
+                                            <?= strtoupper(substr($user_name, 0, 1)) ?>
+                                        </div>
+                                        <div>
+                                            <div style="font-weight:700; color:var(--text-heading)"><?= htmlspecialchars($user_name) ?></div>
+                                            <div class="small text-muted">Achat via votre compte adhérent</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php else: ?>
+                                <div class="alert alert-info py-2 px-3 mb-3 border-0 rounded-4 small d-flex align-items-center gap-2">
+                                    <i class="fas fa-info-circle text-primary"></i>
+                                    <span>Déjà client ? <a href="pages/login.php" class="alert-link text-decoration-none">Connectez-vous</a> pour synchroniser votre achat.</span>
+                                </div>
+                                <div class="d-flex flex-column gap-3">
+                                    <div>
+                                        <label class="form-label small" style="font-weight:600; color:var(--text-heading)">Nom Complet *</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light border-0"><i class="fas fa-user text-muted"></i></span>
+                                            <input type="text" name="nom" class="form-control bg-light border-0 py-2.5" placeholder="Ex: Jean Dupont" required>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="form-label small" style="font-weight:600; color:var(--text-heading)">Adresse Email *</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light border-0"><i class="fas fa-envelope text-muted"></i></span>
+                                            <input type="email" name="email" class="form-control bg-light border-0 py-2.5" placeholder="jean.dupont@example.com" required>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="form-label small" style="font-weight:600; color:var(--text-heading)">Numéro de Téléphone</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light border-0"><i class="fas fa-phone text-muted"></i></span>
+                                            <input type="tel" name="telephone" class="form-control bg-light border-0 py-2.5" placeholder="+235 66 00 00 00">
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+
+                        <!-- Mode de Règlement -->
+                        <div class="mb-3">
+                            <label class="form-label small" style="font-weight:600; color:var(--text-heading)">Mode de Règlement</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-0"><i class="fas fa-wallet text-muted"></i></span>
+                                <select name="mode_reglement" class="form-select bg-light border-0 py-2.5" style="border-radius:0 12px 12px 0">
+                                    <option value="especes" selected>Espèces</option>
+                                    <option value="mobile_money">Mobile Money (Airtel Money / Moov Money)</option>
+                                    <option value="carte">Carte Bancaire</option>
+                                    <option value="cheque">Chèque</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-top p-4" style="background:var(--bg-card)">
+                        <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-primary rounded-pill px-4 shadow" style="font-weight:700">
+                            <i class="fas fa-check-circle me-1"></i>Confirmer & Régler
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        window.LibGerantConfig = {
+            isLoggedIn: <?= json_encode($is_logged_in) ?>,
+            userRole: <?= json_encode($user_role) ?>,
+            userName: <?= json_encode($user_name) ?>,
+            appBasePath: <?= json_encode(app_base() . '/') ?>
+        };
+    </script>
     <script src="assets/js/script.js"></script>
 </body>
 </html>

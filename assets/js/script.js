@@ -283,7 +283,8 @@
                 e.preventDefault();
                 var title = btn.getAttribute("data-book") || "livre";
                 var price = btn.getAttribute("data-price") || "—";
-                cart.push({ title: title, price: price, type: "Papier" });
+                var isbn = btn.getAttribute("data-isbn") || "";
+                cart.push({ title: title, price: price, type: "Papier", isbn: isbn });
                 updateCartUI();
                 showToast("Ajouté au panier", "«" + title + "» (Papier — " + price + ")");
             });
@@ -295,7 +296,8 @@
                 e.preventDefault();
                 var title = btn.getAttribute("data-book") || "livre";
                 var price = btn.getAttribute("data-price") || "—";
-                cart.push({ title: title, price: price, type: "E-book" });
+                var isbn = btn.getAttribute("data-isbn") || "";
+                cart.push({ title: title, price: price, type: "E-book", isbn: isbn });
                 updateCartUI();
                 showToast("E-book ajouté", "«" + title + "» (" + price + ") prêt au téléchargement.");
             });
@@ -310,6 +312,147 @@
                     var bsOffcanvas = bootstrap.Offcanvas.getOrCreateInstance(offcanvas);
                     bsOffcanvas.show();
                 }
+            });
+        }
+
+        // Handle checkout button click
+        var btnCheckout = document.getElementById("btn-checkout");
+        if (btnCheckout) {
+            btnCheckout.addEventListener("click", function(e) {
+                e.preventDefault();
+                if (cart.length === 0) return;
+
+                // Close the cart offcanvas
+                var offcanvasEl = document.getElementById("cartOffcanvas");
+                if (offcanvasEl && window.bootstrap) {
+                    var bsOffcanvas = bootstrap.Offcanvas.getInstance(offcanvasEl);
+                    if (bsOffcanvas) bsOffcanvas.hide();
+                }
+
+                // Populate checkout modal
+                var summaryList = document.getElementById("checkout-summary-list");
+                var summaryTotal = document.getElementById("checkout-summary-total");
+
+                if (summaryList) {
+                    summaryList.innerHTML = "";
+                    var total = 0;
+                    cart.forEach(function(item) {
+                        var priceNum = parseFloat(String(item.price).replace(/FCFA/gi, "").replace(/[\s  ]/g, "").replace(",", "."));
+                        if (!isNaN(priceNum)) total += priceNum;
+
+                        var itemEl = document.createElement("div");
+                        itemEl.className = "d-flex justify-content-between align-items-center small py-1 border-bottom border-light";
+                        itemEl.innerHTML = 
+                            '<div>' +
+                                '<span style="font-weight:600; color:var(--text-heading)">' + item.title + '</span>' +
+                                '<span class="badge bg-light text-dark ms-2" style="font-size:0.7rem">' + item.type + '</span>' +
+                            '</div>' +
+                            '<span style="font-weight:700; color:var(--text-heading)">' + item.price + '</span>';
+                        summaryList.appendChild(itemEl);
+                    });
+
+                    if (summaryTotal) {
+                        summaryTotal.textContent = Math.round(total).toLocaleString("fr-FR").replace(/ /g, " ") + " FCFA";
+                    }
+                }
+
+                // Show checkout modal
+                var checkoutModalEl = document.getElementById("checkoutModal");
+                if (checkoutModalEl && window.bootstrap) {
+                    var bsModal = bootstrap.Modal.getOrCreateInstance(checkoutModalEl);
+                    bsModal.show();
+                }
+            });
+        }
+
+        // Handle checkout form submission
+        var checkoutForm = document.getElementById("checkout-form");
+        if (checkoutForm) {
+            checkoutForm.addEventListener("submit", function(e) {
+                e.preventDefault();
+                if (cart.length === 0) return;
+
+                // Gather form data
+                var formData = new FormData(checkoutForm);
+                var payload = {
+                    cart_json: JSON.stringify(cart),
+                    mode_reglement: formData.get("mode_reglement"),
+                    nom: formData.get("nom") || "",
+                    email: formData.get("email") || "",
+                    telephone: formData.get("telephone") || ""
+                };
+
+                // Disable submit button during request
+                var submitBtn = checkoutForm.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Traitement...';
+                }
+
+                // Detect app base path dynamically
+                var basePath = "";
+                if (window.LibGerantConfig && window.LibGerantConfig.appBasePath !== undefined) {
+                    basePath = window.LibGerantConfig.appBasePath;
+                }
+
+                fetch(basePath + 'api/checkout.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                })
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        showToast("Commande confirmée !", data.message);
+                        
+                        // Clear cart
+                        cart = [];
+                        updateCartUI();
+
+                        // Close modal
+                        var checkoutModalEl = document.getElementById("checkoutModal");
+                        if (checkoutModalEl && window.bootstrap) {
+                            var bsModal = bootstrap.Modal.getInstance(checkoutModalEl);
+                            if (bsModal) bsModal.hide();
+                        }
+
+                        // Reset form
+                        checkoutForm.reset();
+
+                        // Redirect based on user role or display receipt link
+                        setTimeout(function() {
+                            if (window.LibGerantConfig && window.LibGerantConfig.isLoggedIn) {
+                                if (window.LibGerantConfig.userRole === 'adherent') {
+                                    window.location.href = basePath + 'pages/dashboard-adherent.php';
+                                } else if (window.LibGerantConfig.userRole === 'admin' || window.LibGerantConfig.userRole === 'libraire') {
+                                    window.location.href = basePath + 'api/receipt.php?id=' + data.id_vente;
+                                } else {
+                                    window.location.href = basePath;
+                                }
+                            } else {
+                                // For guest, direct to receipt page
+                                window.location.href = basePath + 'api/receipt.php?id=' + data.id_vente;
+                            }
+                        }, 1500);
+
+                    } else {
+                        showToast("Erreur", data.message || "Impossible de finaliser la commande.");
+                        if (submitBtn) {
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = '<i class="fas fa-check-circle me-1"></i>Confirmer & Régler';
+                        }
+                    }
+                })
+                .catch(function(err) {
+                    console.error("Checkout Error:", err);
+                    showToast("Erreur de connexion", "Impossible de contacter le serveur.");
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<i class="fas fa-check-circle me-1"></i>Confirmer & Régler';
+                    }
+                });
             });
         }
 
