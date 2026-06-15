@@ -2,9 +2,9 @@
 // entrypoint.php — Railway startup: migrate DB then launch PHP server
 
 $host = getenv('MYSQLHOST')     ?: 'localhost';
-$db   = getenv('MYSQLDATABASE') ?: 'railway';
+$db   = getenv('MYSQLDATABASE') ?: (getenv('MYSQL_DATABASE') ?: 'railway');
 $user = getenv('MYSQLUSER')     ?: 'root';
-$pass = getenv('MYSQLPASSWORD') ?: '';
+$pass = getenv('MYSQLPASSWORD') ?: (getenv('MYSQL_ROOT_PASSWORD') ?: '');
 $port = getenv('MYSQLPORT')     ?: '3306';
 $appPort = getenv('PORT')       ?: '80';
 

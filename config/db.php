@@ -4,11 +4,12 @@
 
 // En production (Railway), les variables d'environnement sont injectées automatiquement
 // En local (XAMPP), les valeurs par défaut s'appliquent
-$host    = getenv('MYSQLHOST')     ?: 'localhost';
-$db      = getenv('MYSQLDATABASE') ?: 'libgerant_db';
-$user    = getenv('MYSQLUSER')     ?: 'root';
-$pass    = getenv('MYSQLPASSWORD') ?: '';
-$port    = getenv('MYSQLPORT')     ?: '3306';
+// Support both Railway variable naming conventions
+$host    = getenv('MYSQLHOST')        ?: 'localhost';
+$db      = getenv('MYSQLDATABASE')    ?: (getenv('MYSQL_DATABASE') ?: 'railway');
+$user    = getenv('MYSQLUSER')        ?: 'root';
+$pass    = getenv('MYSQLPASSWORD')    ?: (getenv('MYSQL_ROOT_PASSWORD') ?: '');
+$port    = getenv('MYSQLPORT')        ?: '3306';
 $charset = 'utf8mb4';
 
 $dsn = "mysql:host=$host;port=$port;dbname=$db;charset=$charset";
