@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LibGerant — Notre Équipe</title>
+    <meta name="description" content="L'équipe étudiante derrière LibGerant — Projet de Génie Logiciel, ENASTIC.">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <style>
+        .team-hero {
+            padding: 8rem 0 5rem;
+            text-align: center;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: #fff;
+        }
+        .team-hero h1 { font-weight: 800; letter-spacing: -1px; }
+        .team-hero p  { opacity: 0.85; max-width: 600px; margin: 0 auto; }
+
+        .team-grid { margin-top: -3rem; position: relative; z-index: 2; }
+
+        .team-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 2rem 1.5rem;
+            text-align: center;
+            box-shadow: var(--shadow-md);
+            transition: transform var(--transition), box-shadow var(--transition);
+            height: 100%;
+        }
+        .team-card:hover {
+            transform: translateY(-6px);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .avatar-wrapper {
+            position: relative;
+            width: 140px;
+            height: 140px;
+            margin: 0 auto 1.25rem;
+            border-radius: 50%;
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .avatar-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .avatar-initials {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: 800;
+            font-size: 2.5rem;
+            letter-spacing: 1px;
+            pointer-events: none;
+        }
+        /* L'image masque les initiales quand elle se charge ; si onerror, l'image est cachée et les initiales restent visibles */
+
+        .team-name {
+            color: var(--text-heading);
+            font-weight: 800;
+            font-size: 1.15rem;
+            margin-bottom: 0.25rem;
+        }
+        .team-role {
+            color: var(--primary);
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+        .team-bio {
+            color: var(--text-muted);
+            font-size: 0.88rem;
+            line-height: 1.55;
+            margin-bottom: 1.25rem;
+        }
+        .team-socials a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--bg-card-hover);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            margin: 0 4px;
+            transition: all var(--transition);
+            text-decoration: none;
+        }
+        .team-socials a:hover {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .project-info {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 2.5rem;
+            margin: 4rem auto 2rem;
+        }
+        .project-info h3 { color: var(--text-heading); font-weight: 800; }
+        .project-info p  { color: var(--text-muted); margin-bottom: 0; line-height: 1.7; }
+        .info-badge {
+            display: inline-block;
+            padding: 0.4rem 1rem;
+            border-radius: var(--radius-pill);
+            background: rgba(99,102,241,0.12);
+            color: var(--primary);
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ═══════ Navbar ═══════ -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="../index.php"><i class="fas fa-book-open me-2"></i>LibGerant</a>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+                <i class="fas fa-bars" style="color:var(--text-body)"></i>
+            </button>
+            <div class="collapse navbar-collapse" id="mainNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item"><a class="nav-link" href="../index.php#catalogue">Catalogue</a></li>
+                    <li class="nav-item"><a class="nav-link" href="../index.php#genres">Genres</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="equipe.html">Équipe</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" id="themeToggle"><i class="fas fa-moon"></i></a></li>
+                    <li class="nav-item">
+                        <a class="nav-link btn btn-sm btn-login rounded-pill px-4 py-2 border ms-2" href="login.php">
+                            <i class="fas fa-sign-in-alt me-1"></i> Connexion
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ═══════ Hero ═══════ -->
+    <header class="team-hero">
+        <div class="container">
+            <span class="badge rounded-pill bg-white text-primary px-4 py-2 mb-4" style="font-weight:600">
+                <i class="fas fa-users me-1"></i> Génie Logiciel — ENASTIC
+            </span>
+            <h1 class="display-4 mb-3">Notre Équipe</h1>
+            <p class="lead">Quatre étudiants, une vision commune : moderniser la gestion de librairie au Tchad.</p>
+        </div>
+    </header>
+
+    <!-- ═══════ Team Grid ═══════ -->
+    <section class="container team-grid mb-5">
+        <div class="row g-4">
+
+            <!-- Membre 1 -->
+            <div class="col-12 col-sm-6 col-lg-3">
+                <div class="team-card">
+                    <div class="avatar-wrapper">
+                        <span class="avatar-initials">DY</span>
+                        <img src="../assets/img/team/djamal-yassir.jpg"
+                             alt="Djamal Yassir"
+                             onerror="this.style.display='none'">
+                    </div>
+                    <h4 class="team-name">Djamal Yassir</h4>
+                    <p class="team-role">Chef de projet</p>
+                    <p class="team-bio">Coordination de l'équipe, planification 2TUP et suivi des livrables.</p>
+                    <div class="team-socials">
+                        <a href="https://www.linkedin.com/in/djamal-yassir-mahamat-64537a373" target="_blank" title="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="https://djamalyassirmahamat.github.io" target="_blank" title="GitHub"><i class="fab fa-github"></i></a>
+                        <a href="mailto:djamalyassirmahamat@gmail.com" title="Email"><i class="fas fa-envelope"></i></a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Membre 2 -->
+            <div class="col-12 col-sm-6 col-lg-3">
+                <div class="team-card">
+                    <div class="avatar-wrapper">
+                        <span class="avatar-initials">FS</span>
+                        <img src="../assets/img/team/fatime-salim-ossou.jpg"
+                             alt="Fatime Salim Ossou"
+                             onerror="this.style.display='none'">
+                    </div>
+                    <h4 class="team-name">Fatime Salim Ossou</h4>
+                    <p class="team-role">Développeuse Front-end</p>
+                    <p class="team-bio">Interface utilisateur, design system et expérience d'utilisation du site.</p>
+                    <div class="team-socials">
+                        <a href="https://www.linkedin.com/in/fatime-salim-ossou-b88ab43bb" target="_blank" title="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="https://github.com/selimo03" target="_blank" title="GitHub"><i class="fab fa-github"></i></a>
+                        <a href="mailto:salimossoufatime@gmail.com" title="Email"><i class="fas fa-envelope"></i></a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Membre 3 -->
+            <div class="col-12 col-sm-6 col-lg-3">
+                <div class="team-card">
+                    <div class="avatar-wrapper">
+                        <span class="avatar-initials">CS</span>
+                        <img src="../assets/img/team/chegue-sougour.jpg"
+                             alt="Chegue Sougour"
+                             onerror="this.style.display='none'">
+                    </div>
+                    <h4 class="team-name">Chegue Sougour</h4>
+                    <p class="team-role">Développeur Back-end</p>
+                    <p class="team-bio">Modélisation de la base de données, API et logique métier.</p>
+                    <div class="team-socials">
+                        <a href="#" title="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#" title="GitHub"><i class="fab fa-github"></i></a>
+                        <a href="#" title="Email"><i class="fas fa-envelope"></i></a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Membre 4 -->
+            <div class="col-12 col-sm-6 col-lg-3">
+                <div class="team-card">
+                    <div class="avatar-wrapper">
+                        <span class="avatar-initials">HC</span>
+                        <img src="../assets/img/team/hamid-cherif-m-zene.jpg"
+                             alt="Hamid Cherif M. Zene"
+                             onerror="this.style.display='none'">
+                    </div>
+                    <h4 class="team-name">Hamid Cherif M. Zene</h4>
+                    <p class="team-role">Analyse &amp; Tests</p>
+                    <p class="team-bio">Cahier des charges, analyse UML et validation fonctionnelle.</p>
+                    <div class="team-socials">
+                        <a href="#" title="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#" title="GitHub"><i class="fab fa-github"></i></a>
+                        <a href="#" title="Email"><i class="fas fa-envelope"></i></a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Encadré projet -->
+        <div class="project-info text-center">
+            <h3 class="mb-3">À propos du projet</h3>
+            <p class="mb-3">
+                LibGerant est une application web de gestion hybride de librairie (papier &amp; numérique),
+                réalisée dans le cadre du cours de <strong>Génie Logiciel</strong> à l'ENASTIC.
+                Le projet applique la méthodologie <strong>2TUP</strong> et couvre 12 cas d'utilisation,
+                7 modules fonctionnels et une base de 8 tables.
+            </p>
+            <div class="mt-3">
+                <span class="info-badge"><i class="fas fa-code-branch me-1"></i> Méthode 2TUP</span>
+                <span class="info-badge"><i class="fas fa-shield-halved me-1"></i> Standards OWASP</span>
+                <span class="info-badge"><i class="fas fa-graduation-cap me-1"></i> L2 ASRS — ENASTIC</span>
+                <span class="info-badge"><i class="fas fa-calendar me-1"></i> 2026</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════ Footer ═══════ -->
+    <footer class="footer border-top py-4">
+        <div class="container text-center">
+            <p class="small mb-0" style="color:var(--text-muted)">
+                &copy; 2026 LibGerant — Projet de Génie Logiciel, ENASTIC.
+            </p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Theme toggle (réutilise la même clé localStorage que les autres pages)
+        (function() {
+            const saved = localStorage.getItem('libgerant-theme');
+            if (saved === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+            const btn = document.getElementById('themeToggle');
+            if (!btn) return;
+            const updateIcon = () => {
+                const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+                btn.innerHTML = dark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+            };
+            updateIcon();
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+                document.documentElement.setAttribute('data-theme', dark ? 'light' : 'dark');
+                localStorage.setItem('libgerant-theme', dark ? 'light' : 'dark');
+                updateIcon();
+            });
+        })();
+    </script>
+</body>
+</html>
