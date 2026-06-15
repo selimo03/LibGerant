@@ -7,12 +7,31 @@ if (session_status() == PHP_SESSION_NONE) {
 }
 
 /**
+ * Détecte automatiquement le chemin de base de l'application.
+ * - Sur Railway (production) : PORT ou RAILWAY_ENVIRONMENT est défini → base = ""
+ * - Sur XAMPP (local) : aucune variable Railway → base = "/LibGerant"
+ */
+function app_base(): string {
+    // Variable explicite prioritaire (ex: APP_BASE='' dans Railway)
+    $base = getenv('APP_BASE');
+    if ($base !== false) {
+        return rtrim($base, '/');
+    }
+    // Détection automatique Railway
+    if (getenv('PORT') || getenv('RAILWAY_ENVIRONMENT') || getenv('RAILWAY_PROJECT_ID')) {
+        return '';
+    }
+    // Défaut XAMPP local
+    return '/LibGerant';
+}
+
+/**
  * Vérifie si un utilisateur est connecté.
  * Si ce n'est pas le cas, redirige vers la page de connexion.
  */
 function check_logged_in() {
     if (!isset($_SESSION['user_id'])) {
-        header("Location: /LibGerant/pages/login.php");
+        header("Location: " . app_base() . "/pages/login.php");
         exit();
     }
 }
@@ -25,9 +44,9 @@ function authorize(array $allowed_roles) {
     check_logged_in();
     if (!in_array($_SESSION['user_role'], $allowed_roles)) {
         if ($_SESSION['user_role'] === 'adherent') {
-            header("Location: /LibGerant/pages/dashboard-adherent.php?error=unauthorized");
+            header("Location: " . app_base() . "/pages/dashboard-adherent.php?error=unauthorized");
         } else {
-            header("Location: /LibGerant/pages/dashboard-libraire.php?error=unauthorized");
+            header("Location: " . app_base() . "/pages/dashboard-libraire.php?error=unauthorized");
         }
         exit();
     }
@@ -78,7 +97,7 @@ function logout() {
         );
     }
     session_destroy();
-    header("Location: /LibGerant/pages/login.php?status=logged_out");
+    header("Location: " . app_base() . "/pages/login.php?status=logged_out");
     exit();
 }
 ?>
