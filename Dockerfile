@@ -1,25 +1,12 @@
-FROM php:8.2-apache
+FROM php:8.2-cli
 
-# Install PHP extensions
+# Install PHP extensions needed for MySQL
 RUN docker-php-ext-install pdo pdo_mysql mysqli
 
-# Fix "More than one MPM loaded" error:
-# Directly remove ALL MPM symlinks, then manually create ONLY mpm_prefork
-RUN rm -f /etc/apache2/mods-enabled/mpm_*.load \
-          /etc/apache2/mods-enabled/mpm_*.conf && \
-    ln -s /etc/apache2/mods-available/mpm_prefork.load \
-          /etc/apache2/mods-enabled/mpm_prefork.load && \
-    ln -s /etc/apache2/mods-available/mpm_prefork.conf \
-          /etc/apache2/mods-enabled/mpm_prefork.conf && \
-    a2enmod rewrite
-
 # Copy application files
-COPY . /var/www/html/
+COPY . /app
 
-# Set correct permissions
-RUN chown -R www-data:www-data /var/www/html && \
-    chmod -R 755 /var/www/html
+WORKDIR /app
 
-EXPOSE 80
-
-CMD ["apache2-foreground"]
+# Railway sets $PORT dynamically — we must listen on it
+CMD ["sh", "-c", "php -S 0.0.0.0:${PORT:-80} -t /app"]
