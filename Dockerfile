@@ -8,5 +8,8 @@ COPY . /app
 
 WORKDIR /app
 
-# Railway sets $PORT dynamically — we must listen on it
-CMD ["sh", "-c", "php -S 0.0.0.0:${PORT:-80} -t /app"]
+# Make startup script executable
+RUN chmod +x /app/start.sh
+
+# Railway sets $PORT dynamically — start.sh handles migration + server start
+CMD ["/app/start.sh"]
