@@ -1,15 +1,18 @@
 FROM php:8.0-apache
 
-# Extensions PHP nécessaires
+# Extensions PHP
 RUN docker-php-ext-install pdo pdo_mysql
 
-# Corriger le conflit MPM Apache
-RUN a2dismod mpm_event mpm_worker 2>/dev/null; a2enmod mpm_prefork rewrite
+# Supprimer les modules MPM en conflit directement
+RUN rm -f /etc/apache2/mods-enabled/mpm_event.conf \
+          /etc/apache2/mods-enabled/mpm_event.load \
+          /etc/apache2/mods-enabled/mpm_worker.conf \
+          /etc/apache2/mods-enabled/mpm_worker.load \
+    && a2enmod mpm_prefork rewrite
 
-# Copier tout le projet
+# Copier le projet
 COPY . /var/www/html/
 
-# Permissions
 RUN chown -R www-data:www-data /var/www/html
 
 EXPOSE 80
