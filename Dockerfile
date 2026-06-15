@@ -8,8 +8,5 @@ COPY . /app
 
 WORKDIR /app
 
-# Make startup script executable
-RUN chmod +x /app/start.sh
-
-# Railway sets $PORT dynamically — start.sh handles migration + server start
-CMD ["/app/start.sh"]
+# Use PHP entrypoint (no shell script = no CRLF issues)
+CMD ["php", "/app/entrypoint.php"]
